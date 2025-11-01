@@ -4,6 +4,7 @@ import { MatrixRain } from './components/MatrixRain';
 import { EmailDisplay } from './components/EmailDisplay';
 import { MessageList } from './components/MessageList';
 import { MessageViewer } from './components/MessageViewer';
+import { EmailHistory } from './components/EmailHistory';
 import {
   createRandomMailbox,
   listMessages,
@@ -13,6 +14,11 @@ import {
   Message,
   MessageDetail,
 } from './services/tempmail';
+import {
+  addEmailToHistory,
+  getEmailHistory,
+  EmailHistoryItem,
+} from './services/emailHistory';
 
 function App() {
   const [email, setEmail] = useState<string>('');
@@ -21,6 +27,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [copiedFeedback, setCopiedFeedback] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
 
   const generateEmail = async () => {
     setLoading(true);
@@ -29,9 +37,33 @@ function App() {
       setEmail(mailbox.email);
       setMessages([]);
       localStorage.setItem('tempmail_address', mailbox.email);
+      addEmailToHistory(mailbox.email);
+      setEmailHistory(getEmailHistory());
     } catch (error) {
       console.error('Failed to generate email:', error);
       alert('Failed to generate email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestoreEmail = async (restoredEmail: string) => {
+    if (restoredEmail === email) {
+      setShowHistory(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      setEmail(restoredEmail);
+      setMessages([]);
+      localStorage.setItem('tempmail_address', restoredEmail);
+      addEmailToHistory(restoredEmail);
+      setEmailHistory(getEmailHistory());
+      setShowHistory(false);
+    } catch (error) {
+      console.error('Failed to restore email:', error);
+      alert('Failed to restore email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,16 +111,24 @@ function App() {
 
     if (!confirm('Are you sure you want to delete this mailbox?')) return;
 
+    const emailToDelete = email;
+    
+    // Clear local state first
+    setMessages([]);
+    setSelectedMessage(null);
+    localStorage.removeItem('tempmail_address');
+    setEmailHistory(getEmailHistory());
+    
+    // Try to delete from API, but don't block if it fails
     try {
-      await deleteMailbox(email);
-      setEmail('');
-      setMessages([]);
-      setSelectedMessage(null);
-      localStorage.removeItem('tempmail_address');
+      await deleteMailbox(emailToDelete);
     } catch (error) {
-      console.error('Failed to delete mailbox:', error);
-      alert('Failed to delete mailbox. Please try again.');
+      console.warn('Failed to delete mailbox from API (continuing anyway):', error);
+      // Continue anyway - the mailbox will expire on its own
     }
+    
+    // Automatically generate a new email after deletion attempt
+    await generateEmail();
   };
 
   const copyToClipboard = () => {
@@ -101,9 +141,12 @@ function App() {
     const savedEmail = localStorage.getItem('tempmail_address');
     if (savedEmail) {
       setEmail(savedEmail);
+      // Add to history if not already there, or update lastUsed if it exists
+      addEmailToHistory(savedEmail);
     } else {
       generateEmail();
     }
+    setEmailHistory(getEmailHistory());
   }, []);
 
   useEffect(() => {
@@ -150,8 +193,11 @@ function App() {
               <EmailDisplay
                 email={email}
                 onCopy={copyToClipboard}
-                onRefresh={generateEmail}
                 onDelete={handleDeleteMailbox}
+                onShowHistory={() => {
+                  setEmailHistory(getEmailHistory());
+                  setShowHistory(true);
+                }}
               />
 
               <div className="flex items-center justify-between mb-4">
@@ -196,6 +242,16 @@ function App() {
         message={selectedMessage}
         onClose={() => setSelectedMessage(null)}
       />
+
+      {showHistory && (
+        <EmailHistory
+          history={emailHistory}
+          currentEmail={email}
+          onSelectEmail={handleRestoreEmail}
+          onClose={() => setShowHistory(false)}
+          onHistoryChange={() => setEmailHistory(getEmailHistory())}
+        />
+      )}
     </div>
   );
 }

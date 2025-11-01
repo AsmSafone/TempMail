@@ -1,29 +1,29 @@
-import { Copy, RefreshCw, Trash2 } from 'lucide-react';
+import { Copy, Trash2, Clock } from 'lucide-react';
 
 interface EmailDisplayProps {
   email: string;
   onCopy: () => void;
-  onRefresh: () => void;
   onDelete: () => void;
+  onShowHistory: () => void;
 }
 
-export const EmailDisplay = ({ email, onCopy, onRefresh, onDelete }: EmailDisplayProps) => {
+export const EmailDisplay = ({ email, onCopy, onDelete, onShowHistory }: EmailDisplayProps) => {
   return (
     <div className="bg-black border-2 border-green-500 rounded-lg p-6 shadow-2xl shadow-green-500/50">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-green-400 font-mono text-lg">Your Temporary Email</h2>
         <div className="flex gap-2">
           <button
-            onClick={onRefresh}
+            onClick={onShowHistory}
             className="p-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50"
-            title="Generate new email"
+            title="View email history"
           >
-            <RefreshCw size={18} />
+            <Clock size={18} />
           </button>
           <button
             onClick={onDelete}
             className="p-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500 rounded text-red-400 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/50"
-            title="Delete mailbox"
+            title="Delete mailbox and generate new email"
           >
             <Trash2 size={18} />
           </button>
