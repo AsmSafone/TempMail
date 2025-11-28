@@ -23,6 +23,7 @@ import {
   getEmailHistory,
   EmailHistoryItem,
 } from './services/emailHistory';
+import { decodeEmail } from './utils/emailHash';
 
 function App() {
   const [email, setEmail] = useState<string>('');
@@ -163,17 +164,25 @@ function App() {
   };
 
   useEffect(() => {
-    // Check for email in URL parameters (from shareable link)
+    // Check for hashed email in URL parameters (from shareable link)
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedEmail = urlParams.get('email');
+    const emailHash = urlParams.get('hash');
     
-    if (sharedEmail) {
-      // Load shared email
-      setEmail(sharedEmail);
-      localStorage.setItem('tempmail_address', sharedEmail);
-      addEmailToHistory(sharedEmail);
-      // Clean URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+    if (emailHash) {
+      // Decode the hashed email
+      const decodedEmail = decodeEmail(emailHash);
+      if (decodedEmail) {
+        // Load shared email
+        setEmail(decodedEmail);
+        localStorage.setItem('tempmail_address', decodedEmail);
+        addEmailToHistory(decodedEmail);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Invalid hash, generate new email
+        console.warn('Invalid email hash in URL');
+        generateEmail();
+      }
     } else {
       const savedEmail = localStorage.getItem('tempmail_address');
       if (savedEmail) {

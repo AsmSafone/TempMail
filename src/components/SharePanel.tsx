@@ -1,5 +1,6 @@
 import { Share2, Copy, Link as LinkIcon, X, Check } from 'lucide-react';
 import { useState } from 'react';
+import { generateShareableLink } from '../utils/emailHash';
 
 interface SharePanelProps {
   email: string;
@@ -10,9 +11,7 @@ export const SharePanel = ({ email, onClose }: SharePanelProps) => {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   
-  const shareableLink = typeof window !== 'undefined' 
-    ? `${window.location.origin}?email=${encodeURIComponent(email)}`
-    : '';
+  const shareableLink = generateShareableLink(email);
 
   const copyEmail = () => {
     navigator.clipboard.writeText(email);

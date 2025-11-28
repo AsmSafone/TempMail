@@ -1,5 +1,6 @@
 import { QrCode, Download, X } from 'lucide-react';
 import { useState } from 'react';
+import { generateShareableLink } from '../utils/emailHash';
 
 interface QRCodeGeneratorProps {
   email: string;
@@ -17,11 +18,8 @@ export const QRCodeGenerator = ({ email, onClose }: QRCodeGeneratorProps) => {
       // mailto: link that opens email client
       return `mailto:${email}`;
     } else {
-      // Shareable link that loads the email in the app
-      const shareableLink = typeof window !== 'undefined' 
-        ? `${window.location.origin}?email=${encodeURIComponent(email)}`
-        : email;
-      return shareableLink;
+      // Shareable link with hashed email that loads the email in the app
+      return generateShareableLink(email);
     }
   };
 
@@ -142,7 +140,7 @@ export const QRCodeGenerator = ({ email, onClose }: QRCodeGeneratorProps) => {
             <p className="text-green-300 font-mono text-sm break-all">{email}</p>
             {qrType === 'link' && (
               <p className="text-green-500/50 text-xs font-mono mt-2 break-all">
-                Access Link: {typeof window !== 'undefined' ? `${window.location.origin}?email=${encodeURIComponent(email)}` : ''}
+                Access Link: {generateShareableLink(email)}
               </p>
             )}
           </div>
