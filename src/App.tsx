@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { RefreshCw, Settings, Keyboard as KeyboardIcon } from 'lucide-react';
 import { MatrixRain } from './components/MatrixRain';
 import { EmailDisplay } from './components/EmailDisplay';
 import { MessageList } from './components/MessageList';
 import { MessageViewer } from './components/MessageViewer';
 import { EmailHistory } from './components/EmailHistory';
+import { QRCodeGenerator } from './components/QRCodeGenerator';
+import { SettingsPanel } from './components/SettingsPanel';
+import { KeyboardShortcuts } from './components/KeyboardShortcuts';
+import { SharePanel } from './components/SharePanel';
 import {
   createRandomMailbox,
   listMessages,
@@ -29,6 +33,13 @@ function App() {
   const [copiedFeedback, setCopiedFeedback] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [emailHistory, setEmailHistory] = useState<EmailHistoryItem[]>([]);
+  const [refreshInterval, setRefreshInterval] = useState(10000);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const previousMessageCount = useRef(0);
 
   const generateEmail = async () => {
     setLoading(true);
@@ -75,13 +86,27 @@ function App() {
     setRefreshing(true);
     try {
       const msgs = await listMessages(email);
+      const previousCount = previousMessageCount.current;
       setMessages(msgs);
+      previousMessageCount.current = msgs.length;
+      
+      // Show notification if new emails arrived
+      if (notificationsEnabled && msgs.length > previousCount && 'Notification' in window) {
+        const newEmails = msgs.length - previousCount;
+        if (Notification.permission === 'granted') {
+          new Notification(`New Email${newEmails > 1 ? 's' : ''} Received`, {
+            body: `You have ${newEmails} new email${newEmails > 1 ? 's' : ''} in ${email}`,
+            icon: 'https://cdn-icons-png.freepik.com/256/10505/10505826.png',
+          });
+        }
+      }
     } catch (error) {
       console.error('Failed to refresh messages:', error);
     } finally {
       setRefreshing(false);
     }
   };
+
 
   const handleSelectMessage = async (message: Message) => {
     try {
@@ -138,24 +163,88 @@ function App() {
   };
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem('tempmail_address');
-    if (savedEmail) {
-      setEmail(savedEmail);
-      // Add to history if not already there, or update lastUsed if it exists
-      addEmailToHistory(savedEmail);
+    // Check for email in URL parameters (from shareable link)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedEmail = urlParams.get('email');
+    
+    if (sharedEmail) {
+      // Load shared email
+      setEmail(sharedEmail);
+      localStorage.setItem('tempmail_address', sharedEmail);
+      addEmailToHistory(sharedEmail);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     } else {
-      generateEmail();
+      const savedEmail = localStorage.getItem('tempmail_address');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        // Add to history if not already there, or update lastUsed if it exists
+        addEmailToHistory(savedEmail);
+      } else {
+        generateEmail();
+      }
     }
     setEmailHistory(getEmailHistory());
   }, []);
 
   useEffect(() => {
     if (email) {
+      previousMessageCount.current = 0;
       refreshMessages();
-      const interval = setInterval(refreshMessages, 10000);
+      const interval = setInterval(refreshMessages, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [email]);
+  }, [email, refreshInterval]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (
+        (e.target as HTMLElement).tagName === 'INPUT' ||
+        (e.target as HTMLElement).tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        generateEmail();
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        refreshMessages();
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        setShowSettings(true);
+      } else if (e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        setShowHistory(true);
+      } else if (e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        setShowQR(true);
+      } else if (e.key === '?' && !showShortcuts) {
+        e.preventDefault();
+        setShowShortcuts(true);
+      } else if (e.key === 'Escape') {
+        setShowHistory(false);
+        setShowQR(false);
+        setShowSettings(false);
+        setShowShortcuts(false);
+        setShowShare(false);
+        setSelectedMessage(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showShortcuts]);
+
+  // Request notification permission on mount if enabled
+  useEffect(() => {
+    if (notificationsEnabled && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [notificationsEnabled]);
 
   return (
     <div className="min-h-screen bg-black text-green-400 relative overflow-hidden">
@@ -198,23 +287,42 @@ function App() {
                   setEmailHistory(getEmailHistory());
                   setShowHistory(true);
                 }}
+                onShare={() => setShowShare(true)}
+                onShowQR={() => setShowQR(true)}
               />
 
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
                 <div className="text-green-500 font-mono text-sm">
-                  Auto-refresh: Every 10 seconds
+                  Auto-refresh: Every {refreshInterval / 1000} seconds
                 </div>
-                <button
-                  onClick={refreshMessages}
-                  disabled={refreshing}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50 disabled:opacity-50 font-mono"
-                >
-                  <RefreshCw
-                    size={16}
-                    className={refreshing ? 'animate-spin' : ''}
-                  />
-                  {refreshing ? 'Refreshing...' : 'Refresh Now'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="p-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50"
+                    title="Settings (S)"
+                  >
+                    <Settings size={18} />
+                  </button>
+                  <button
+                    onClick={() => setShowShortcuts(true)}
+                    className="p-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50"
+                    title="Keyboard Shortcuts (?)"
+                  >
+                    <KeyboardIcon size={18} />
+                  </button>
+                  <button
+                    onClick={refreshMessages}
+                    disabled={refreshing}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50 disabled:opacity-50 font-mono"
+                    title="Refresh (R)"
+                  >
+                    <RefreshCw
+                      size={16}
+                      className={refreshing ? 'animate-spin' : ''}
+                    />
+                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                  </button>
+                </div>
               </div>
 
               <MessageList
@@ -229,8 +337,7 @@ function App() {
 
         <footer className="text-center mt-16 text-green-600 font-mono text-sm">
           <div className="mb-2">
-            &gt; Powered by Safone | All emails are automatically deleted
-            after 24 hours &lt;
+            &gt; Copyright © {new Date().getFullYear()} Safone &lt;
           </div>
           <div className="text-xs">
             [ DO NOT USE FOR SENSITIVE INFORMATION ]
@@ -251,6 +358,32 @@ function App() {
           onClose={() => setShowHistory(false)}
           onHistoryChange={() => setEmailHistory(getEmailHistory())}
         />
+      )}
+
+      {showQR && email && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <QRCodeGenerator email={email} onClose={() => setShowQR(false)} />
+        </div>
+      )}
+
+      {showSettings && (
+        <SettingsPanel
+          refreshInterval={refreshInterval}
+          onRefreshIntervalChange={setRefreshInterval}
+          notificationsEnabled={notificationsEnabled}
+          onNotificationsToggle={setNotificationsEnabled}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showShortcuts && (
+        <KeyboardShortcuts onClose={() => setShowShortcuts(false)} />
+      )}
+
+      {showShare && email && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <SharePanel email={email} onClose={() => setShowShare(false)} />
+        </div>
       )}
     </div>
   );
