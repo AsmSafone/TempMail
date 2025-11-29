@@ -19,12 +19,13 @@ export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-black border-2 border-green-500 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl shadow-green-500/50 animate-slideUp">
-        <div className="bg-green-950/50 border-b border-green-500 p-4 flex items-center justify-between sticky top-0">
-          <h2 className="text-green-400 font-mono text-lg flex items-center gap-2">
-            <FileText size={20} />
-            Message Details
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
+      <div className="bg-black border-2 border-green-500 rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden shadow-2xl shadow-green-500/50 animate-slideUp">
+        <div className="bg-green-950/50 border-b border-green-500 p-3 sm:p-4 flex items-center justify-between sticky top-0">
+          <h2 className="text-green-400 font-mono text-base sm:text-lg flex items-center gap-2">
+            <FileText size={18} className="sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Message Details</span>
+            <span className="sm:hidden">Details</span>
           </h2>
           <button
             onClick={onClose}
@@ -34,53 +35,53 @@ export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-3 p-3 bg-green-950/30 border border-green-700 rounded">
-              <User className="text-green-500 flex-shrink-0 mt-1" size={18} />
+        <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(95vh-70px)] sm:max-h-[calc(90vh-80px)]">
+          <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+            <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-green-950/30 border border-green-700 rounded">
+              <User className="text-green-500 flex-shrink-0 mt-1 sm:w-[18px] sm:h-[18px]" size={16} />
               <div className="flex-1 min-w-0">
                 <p className="text-green-500/70 text-xs font-mono mb-1">FROM</p>
-                <p className="text-green-300 font-mono break-all">{message.from}</p>
+                <p className="text-green-300 font-mono text-sm sm:text-base break-all">{message.from}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-green-950/30 border border-green-700 rounded">
-              <Calendar className="text-green-500 flex-shrink-0 mt-1" size={18} />
+            <div className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-green-950/30 border border-green-700 rounded">
+              <Calendar className="text-green-500 flex-shrink-0 mt-1 sm:w-[18px] sm:h-[18px]" size={16} />
               <div className="flex-1 min-w-0">
                 <p className="text-green-500/70 text-xs font-mono mb-1">DATE</p>
-                <p className="text-green-300 font-mono">{formatDate(message.created_at)}</p>
+                <p className="text-green-300 font-mono text-sm sm:text-base">{formatDate(message.created_at)}</p>
               </div>
             </div>
 
-            <div className="p-4 bg-green-950/30 border border-green-700 rounded">
+            <div className="p-3 sm:p-4 bg-green-950/30 border border-green-700 rounded">
               <p className="text-green-500/70 text-xs font-mono mb-2">SUBJECT</p>
-              <p className="text-green-300 font-mono text-lg">
+              <p className="text-green-300 font-mono text-base sm:text-lg">
                 {message.subject || '(No Subject)'}
               </p>
             </div>
           </div>
 
-          <div className="bg-green-950/30 border border-green-700 rounded p-4">
-            <p className="text-green-500/70 text-xs font-mono mb-3">MESSAGE CONTENT</p>
+          <div className="bg-green-950/30 border border-green-700 rounded p-3 sm:p-4">
+            <p className="text-green-500/70 text-xs font-mono mb-2 sm:mb-3">MESSAGE CONTENT</p>
             <div
-              className="prose prose-invert prose-green max-w-none text-green-300"
+              className="prose prose-invert prose-green max-w-none text-green-300 text-sm sm:text-base"
               dangerouslySetInnerHTML={{ __html: message.body }}
             />
           </div>
 
           {message.attachments && message.attachments.length > 0 && (
-            <div className="mt-6 p-4 bg-green-950/30 border border-green-700 rounded">
-              <p className="text-green-500/70 text-xs font-mono mb-3">
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-950/30 border border-green-700 rounded">
+              <p className="text-green-500/70 text-xs font-mono mb-2 sm:mb-3">
                 ATTACHMENTS ({message.attachments.length})
               </p>
               <div className="space-y-2">
                 {message.attachments.map((attachment, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-2 bg-black/50 border border-green-800 rounded"
+                    className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-black/50 border border-green-800 rounded"
                   >
-                    <div className="flex-1">
-                      <span className="text-green-300 font-mono text-sm">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-green-300 font-mono text-xs sm:text-sm break-all">
                         {attachment.filename}
                       </span>
                       <span className="text-green-500/70 text-xs font-mono ml-2">
@@ -92,7 +93,7 @@ export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
                       download={attachment.filename}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 text-xs font-mono transition-all duration-300"
+                      className="px-3 py-1 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 text-xs font-mono transition-all duration-300 text-center sm:text-left"
                       onClick={(e) => e.stopPropagation()}
                     >
                       Download

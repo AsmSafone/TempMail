@@ -50,13 +50,13 @@ export const MessageList = ({
 
   return (
     <div className="bg-black border-2 border-green-500 rounded-lg shadow-2xl shadow-green-500/50 overflow-hidden">
-      <div className="bg-green-950/50 border-b border-green-500 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-green-400 font-mono text-lg flex items-center gap-2">
-            <Mail size={20} />
+      <div className="bg-green-950/50 border-b border-green-500 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <h2 className="text-green-400 font-mono text-base sm:text-lg flex items-center gap-2">
+            <Mail size={18} className="sm:w-5 sm:h-5" />
             Inbox ({filteredMessages.length})
           </h2>
-          <div className="relative flex-1 max-w-xs">
+          <div className="relative flex-1 sm:flex-initial sm:max-w-xs w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500/70" size={16} />
             <input
               type="text"
@@ -69,12 +69,12 @@ export const MessageList = ({
         </div>
       </div>
 
-      <div className="divide-y divide-green-900/50 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-green-900/50 max-h-96 sm:max-h-[32rem] overflow-y-auto">
         {filteredMessages.length === 0 ? (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <Search className="mx-auto mb-4 text-green-500/50" size={32} />
-            <p className="text-green-400 font-mono">No emails found</p>
-            <p className="text-green-500/70 text-sm font-mono mt-2">
+            <p className="text-green-400 font-mono text-sm sm:text-base">No emails found</p>
+            <p className="text-green-500/70 text-xs sm:text-sm font-mono mt-2">
               Try a different search term
             </p>
           </div>
@@ -82,26 +82,27 @@ export const MessageList = ({
           filteredMessages.map((message) => (
             <div
               key={message.id}
-              className={`p-4 cursor-pointer transition-all duration-300 relative group ${
+              className={`p-3 sm:p-4 cursor-pointer transition-all duration-300 relative group ${
                 selectedMessageId === message.id
                   ? 'bg-green-900/30 border-l-4 border-green-400'
                   : 'hover:bg-green-950/30 border-l-4 border-transparent'
               }`}
               onClick={() => onSelectMessage(message)}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-green-400 font-mono text-sm font-semibold truncate">
+                    <span className="text-green-400 font-mono text-xs sm:text-sm font-semibold truncate">
                       {message.from}
                     </span>
                   </div>
-                  <p className="text-green-300 font-mono text-base mb-2 truncate">
+                  <p className="text-green-300 font-mono text-sm sm:text-base mb-2 truncate">
                     {message.subject || '(No Subject)'}
                   </p>
                   <div className="flex items-center gap-2 text-green-500/70 text-xs font-mono">
                     <Clock size={12} />
-                    {formatDate(message.created_at)}
+                    <span className="hidden sm:inline">{formatDate(message.created_at)}</span>
+                    <span className="sm:hidden">{new Date(message.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -110,7 +111,7 @@ export const MessageList = ({
                     e.stopPropagation();
                     onDeleteMessage(message.id);
                   }}
-                  className="p-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500 rounded text-red-400 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:shadow-lg hover:shadow-red-500/50 flex-shrink-0"
+                  className="p-2 bg-red-900/30 hover:bg-red-900/50 border border-red-500 rounded text-red-400 transition-all duration-300 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:shadow-lg hover:shadow-red-500/50 flex-shrink-0"
                   title="Delete message"
                 >
                   <Trash2 size={14} />

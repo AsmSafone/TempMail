@@ -259,21 +259,21 @@ function App() {
     <div className="min-h-screen bg-black text-green-400 relative overflow-hidden">
       <MatrixRain />
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        <header className="text-center mb-12">
-          <h1 className="text-5xl font-bold font-mono mb-4 animate-pulse text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <header className="text-center mb-6 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-mono mb-2 sm:mb-4 animate-pulse text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]">
             TEMPMAIL 2.0
           </h1>
-          <p className="text-green-500 font-mono text-lg">
+          <p className="text-green-500 font-mono text-sm sm:text-base md:text-lg px-2">
             &gt; Secure Temporary Email System v2.0 &lt;
           </p>
-          <div className="mt-4 text-green-600 text-sm font-mono">
+          <div className="mt-2 sm:mt-4 text-green-600 text-xs sm:text-sm font-mono px-2">
             [ ENCRYPTED ] [ ANONYMOUS ] [ DISPOSABLE ]
           </div>
         </header>
 
         {copiedFeedback && (
-          <div className="fixed top-4 right-4 bg-green-900 border border-green-500 text-green-300 px-6 py-3 rounded-lg shadow-xl shadow-green-500/50 font-mono animate-slideIn z-50">
+          <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto bg-green-900 border border-green-500 text-green-300 px-4 sm:px-6 py-3 rounded-lg shadow-xl shadow-green-500/50 font-mono animate-slideIn z-50 text-sm sm:text-base">
             ✓ Email copied to clipboard
           </div>
         )}
@@ -300,11 +300,11 @@ function App() {
                 onShowQR={() => setShowQR(true)}
               />
 
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-                <div className="text-green-500 font-mono text-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4">
+                <div className="text-green-500 font-mono text-xs sm:text-sm">
                   Auto-refresh: Every {refreshInterval / 1000} seconds
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => setShowSettings(true)}
                     className="p-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50"
@@ -322,14 +322,15 @@ function App() {
                   <button
                     onClick={refreshMessages}
                     disabled={refreshing}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50 disabled:opacity-50 font-mono"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/50 disabled:opacity-50 font-mono text-sm sm:text-base flex-1 sm:flex-initial"
                     title="Refresh (R)"
                   >
                     <RefreshCw
                       size={16}
                       className={refreshing ? 'animate-spin' : ''}
                     />
-                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                    <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+                    <span className="sm:hidden">{refreshing ? '...' : 'Refresh'}</span>
                   </button>
                 </div>
               </div>
@@ -344,7 +345,7 @@ function App() {
           ) : null}
         </div>
 
-        <footer className="text-center mt-16 text-green-600 font-mono text-sm">
+        <footer className="text-center mt-8 sm:mt-16 text-green-600 font-mono text-xs sm:text-sm px-2">
           <div className="mb-2">
             &gt; Copyright © {new Date().getFullYear()} Safone &lt;
           </div>
