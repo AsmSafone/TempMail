@@ -1,0 +1,41 @@
+{
+  "name": "TempMail 2.0 - Secure Temporary Email",
+  "short_name": "TempMail",
+  "description": "Secure Temporary Email System - Anonymous, Encrypted, Disposable",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Generate New Email",
+      "short_name": "New Email",
+      "description": "Generate a new temporary email address",
+      "url": "/?action=new",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+
