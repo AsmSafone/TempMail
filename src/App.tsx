@@ -49,7 +49,7 @@ function App() {
       setEmail(mailbox.email);
       setMessages([]);
       localStorage.setItem('tempmail_address', mailbox.email);
-      addEmailToHistory(mailbox.email);
+      addEmailToHistory(mailbox.email, mailbox.token, mailbox.id);
       setEmailHistory(getEmailHistory());
     } catch (error) {
       console.error('Failed to generate email:', error);
@@ -90,7 +90,7 @@ function App() {
       const previousCount = previousMessageCount.current;
       setMessages(msgs);
       previousMessageCount.current = msgs.length;
-      
+
       // Show notification if new emails arrived
       if (notificationsEnabled && msgs.length > previousCount && 'Notification' in window) {
         const newEmails = msgs.length - previousCount;
@@ -110,8 +110,9 @@ function App() {
 
 
   const handleSelectMessage = async (message: Message) => {
+    if (!email) return;
     try {
-      const fullMessage = await getMessage(message.hash_id);
+      const fullMessage = await getMessage(message.hash_id, email);
       setSelectedMessage(fullMessage);
     } catch (error) {
       console.error('Failed to load message:', error);
@@ -120,8 +121,9 @@ function App() {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
+    if (!email) return;
     try {
-      await deleteMessageAPI(messageId);
+      await deleteMessageAPI(messageId, email);
       setMessages(messages.filter((m) => m.id !== messageId));
       if (selectedMessage?.id === messageId) {
         setSelectedMessage(null);
@@ -138,13 +140,13 @@ function App() {
     if (!confirm('Are you sure you want to delete this mailbox?')) return;
 
     const emailToDelete = email;
-    
+
     // Clear local state first
     setMessages([]);
     setSelectedMessage(null);
     localStorage.removeItem('tempmail_address');
     setEmailHistory(getEmailHistory());
-    
+
     // Try to delete from API, but don't block if it fails
     try {
       await deleteMailbox(emailToDelete);
@@ -152,7 +154,7 @@ function App() {
       console.warn('Failed to delete mailbox from API (continuing anyway):', error);
       // Continue anyway - the mailbox will expire on its own
     }
-    
+
     // Automatically generate a new email after deletion attempt
     await generateEmail();
   };
@@ -167,7 +169,7 @@ function App() {
     // Check for hashed email in URL parameters (from shareable link)
     const urlParams = new URLSearchParams(window.location.search);
     const emailHash = urlParams.get('hash');
-    
+
     if (emailHash) {
       // Decode the hashed email
       const decodedEmail = decodeEmail(emailHash);
@@ -357,6 +359,7 @@ function App() {
 
       <MessageViewer
         message={selectedMessage}
+        email={email}
         onClose={() => setSelectedMessage(null)}
       />
 

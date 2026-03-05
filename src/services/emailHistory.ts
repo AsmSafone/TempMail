@@ -2,6 +2,8 @@ export interface EmailHistoryItem {
   email: string;
   createdAt: string;
   lastUsed?: string;
+  token?: string;
+  id?: string;
 }
 
 const HISTORY_KEY = 'tempmail_history';
@@ -14,10 +16,10 @@ export const getEmailHistory = (): EmailHistoryItem[] => {
   try {
     const historyJson = localStorage.getItem(HISTORY_KEY);
     if (!historyJson) return [];
-    
+
     const history = JSON.parse(historyJson) as EmailHistoryItem[];
-    return history.sort((a, b) => 
-      new Date(b.lastUsed || b.createdAt).getTime() - 
+    return history.sort((a, b) =>
+      new Date(b.lastUsed || b.createdAt).getTime() -
       new Date(a.lastUsed || a.createdAt).getTime()
     );
   } catch (error) {
@@ -29,32 +31,40 @@ export const getEmailHistory = (): EmailHistoryItem[] => {
 /**
  * Add an email address to history
  */
-export const addEmailToHistory = (email: string): void => {
+export const addEmailToHistory = (
+  email: string,
+  token?: string,
+  id?: string
+): void => {
   try {
     const history = getEmailHistory();
-    
+
     // Check if email already exists in history
     const existingIndex = history.findIndex(item => item.email === email);
-    
+
     if (existingIndex >= 0) {
-      // Update lastUsed timestamp
+      // Update lastUsed timestamp and optionally token/id
       history[existingIndex].lastUsed = new Date().toISOString();
+      if (token) history[existingIndex].token = token;
+      if (id) history[existingIndex].id = id;
     } else {
       // Add new email to history
       const newItem: EmailHistoryItem = {
         email,
         createdAt: new Date().toISOString(),
         lastUsed: new Date().toISOString(),
+        token,
+        id,
       };
-      
+
       history.unshift(newItem);
-      
+
       // Limit history size
       if (history.length > MAX_HISTORY_ITEMS) {
         history.splice(MAX_HISTORY_ITEMS);
       }
     }
-    
+
     // Save back to localStorage
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
   } catch (error) {
@@ -93,7 +103,7 @@ export const updateLastUsed = (email: string): void => {
   try {
     const history = getEmailHistory();
     const item = history.find(item => item.email === email);
-    
+
     if (item) {
       item.lastUsed = new Date().toISOString();
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history));

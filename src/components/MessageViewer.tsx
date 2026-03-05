@@ -1,12 +1,16 @@
-import { X, User, Calendar, FileText } from 'lucide-react';
-import { MessageDetail } from '../services/tempmail';
+import { X, User, Calendar, FileText, Download } from 'lucide-react';
+import { MessageDetail, downloadAttachment } from '../services/tempmail';
+import { useState } from 'react';
 
 interface MessageViewerProps {
   message: MessageDetail | null;
+  email: string | null;
   onClose: () => void;
 }
 
-export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
+export const MessageViewer = ({ message, email, onClose }: MessageViewerProps) => {
+  const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
+
   if (!message) return null;
 
   const formatDate = (dateString: string) => {
@@ -15,6 +19,29 @@ export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
       return date.toLocaleString();
     } catch {
       return dateString;
+    }
+  };
+
+  const handleDownload = async (link: string, filename: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!email) return;
+
+    try {
+      setDownloadingUrl(link);
+      const blob = await downloadAttachment(link, email);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Failed to download attachment:', error);
+      alert('Failed to download attachment. Please try again.');
+    } finally {
+      setDownloadingUrl(null);
     }
   };
 
@@ -88,16 +115,23 @@ export const MessageViewer = ({ message, onClose }: MessageViewerProps) => {
                         ({(attachment.size / 1024).toFixed(2)} KB)
                       </span>
                     </div>
-                    <a
-                      href={attachment.link}
-                      download={attachment.filename}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 text-xs font-mono transition-all duration-300 text-center sm:text-left"
-                      onClick={(e) => e.stopPropagation()}
+                    <button
+                      onClick={(e) => handleDownload(attachment.link, attachment.filename, e)}
+                      disabled={downloadingUrl === attachment.link || !email}
+                      className="flex items-center justify-center gap-1.5 px-3 py-1 bg-green-900/30 hover:bg-green-900/50 border border-green-500 rounded text-green-400 text-xs font-mono transition-all duration-300 disabled:opacity-50"
                     >
-                      Download
-                    </a>
+                      {downloadingUrl === attachment.link ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+                          <span>Downloading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download size={14} />
+                          <span>Download</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>
